@@ -23,6 +23,8 @@ const httpLink = new HttpLink({
   },
 })
 
+
+
 const cache = new InMemoryCache()
 
 const link = from([removeTypenameLink, errorLink, httpLink])
