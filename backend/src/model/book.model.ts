@@ -1,6 +1,7 @@
 import mongoose, { Model } from 'mongoose';
 import { BookDoc, GraphContext } from '../types';
 import gql from 'graphql-tag';
+import { AuthMiddlewareGraphQL } from '../middleware';
 
 // for mongoose documents, we need to extend the document interface from mongoose
 interface BookMongoDoc extends BookDoc {
@@ -109,36 +110,35 @@ export const BookTypeDef = gql `
 `
 
 export const BookResolver = {
-//   Query: {
-//     bookList: async (_: any, __: any, { req }: GraphContext) => {
-//       authMiddlewareGraph(req)
-//       const books = BookModel.find().sort({ createdAt: -1 })
-//       return books
-//     },
-//     book: async (_: any, { id }: any, { req }: GraphContext) => {
-//       authMiddlewareGraph(req)
-//       const book = BookModel.findById(id)
-//       return book
-//     },
-//   },
+  Query: {
+    bookList: async (_: any, __: any, { req }: GraphContext) => {
+      AuthMiddlewareGraphQL(req)
+      const books = BookModel.find().sort({ createdAt: -1 })
+      return books
+    },
+    book: async (_: any, { id }: any, { req }: GraphContext) => {
+      AuthMiddlewareGraphQL(req)
+      const book = BookModel.findById(id)
+      return book
+    },
+  },
+  // graphQL core concept - updating title and returning the only title
   Mutation: {
-    // _ never used next input and next context (req) in index.js 
+    // _ never used and then next input and next context (req) in index.js 
     // app.js->>expressMiddleware->>context
     bookCreate: async (_: any, { input }: any, { req }: GraphContext) => {
-    // for auhtentication in express we can use middleware here but in graphQL can't 
-    // we have to set up functions for authentication
-    //   authMiddlewareGraph(req)
+      AuthMiddlewareGraphQL(req)
       const book = new BookModel(input)
       await book.save()
       return book
     },
-    // bookUpdate: async (_: any, { id, input }: any, { req }: GraphContext) => {
-    //   authMiddlewareGraph(req)
-    //   return await BookModel.findByIdAndUpdate(id, input, { new: true })
-    // },
-    // bookDelete: async (_: any, { id }: any, { req }: GraphContext) => {
-    //   authMiddlewareGraph(req)
-    //   return await BookModel.findByIdAndDelete(id)
-    // },
+    bookUpdate: async (_: any, { id, input }: any, { req }: GraphContext) => {
+      AuthMiddlewareGraphQL(req)
+      return await BookModel.findByIdAndUpdate(id, input, { new: true })
+    },
+    bookDelete: async (_: any, { id }: any, { req }: GraphContext) => {
+      AuthMiddlewareGraphQL(req)
+      return await BookModel.findByIdAndDelete(id)
+    },
   },
 }
