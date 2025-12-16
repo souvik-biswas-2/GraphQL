@@ -8,13 +8,14 @@ dotenv.config();
 // console.log('Reading Envs', process.env.NODE_ENV);
 
 // External Imports
-import cors from 'cors'; // setup communication between front end and backend
+import cors from 'cors'; // setup communication between front end and backend (middleware)
 import express from 'express';
 import http from 'http';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { ApolloServer } from '@apollo/server';
 import { resolvers, typeDefs } from './lib/graphql/schema.js';
+import { GraphContext } from './types'; //typedef can be import without .js extension
 
 const port = process.env.PORT || 5000;
 const env = process.env.NODE_ENV || 'dev';
@@ -25,6 +26,14 @@ const graphqlPath = process.env.GRAPHQL_PATH || '/gql';
 const app = express();
 
 const server = http.createServer(app);
+
+// middleware Initialization
+function initializeMiddleware(appReference : typeof app){
+    appReference.use(cors());
+    appReference.use(express.urlencoded( { limit : '2mb', extended : true } ));
+    appReference.use(express.json( { limit : '2mb' } ));
+    // appReference.use(asyncErrorMiddleware);
+}
 
 // apollo server initialization
 // typedefinion and resolver as parameter
@@ -40,13 +49,34 @@ const apolloServer = new ApolloServer( {
 // while only setup express i directly write app.listen(port)
 // but here i setup GraphQL that why creating a HTTP server with {Express + GraphQL}
 async function startServer() {
-    console.log("Server Started");
-    await new Promise<void>((resolve) => 
-        server.listen( { port },resolve ),
-    ).then( () => {
-        console.log(`Server is stated at http:localhost:${port}`);
-        
-    })
+
+    try {
+        await apolloServer.start();
+        initializeMiddleware(app);
+        // connecting graphQL 
+        app.get('/', (_, res) => {
+            res.send('Server is Running');
+        })
+        app.use(
+            graphqlPath,
+            expressMiddleware(apolloServer, {
+                context : async ( { req } ) => 
+                ({
+                    req,
+                } as GraphContext),
+            })
+        );
+        await new Promise<void>((resolve) => 
+            server.listen( { port },resolve ),
+        ).then( () => {
+            console.log(`Server is stated at http:localhost:${port}`);
+            
+        })
+    } catch (error) {
+        console.error('Error starting Server', error);
+    }
+
+    
 }
 
 startServer();
