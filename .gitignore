@@ -2,7 +2,26 @@ node_modules/
 
 dist/
 .env
+.env.local
+.env.*.local
 .DS_Store
 .vscode/
+.idea/
 logs/
 npm-debug.log*
+yarn-error.log*
+
+# Docker
+docker-compose.override.yml
+.mongosh_history
+mongo-keyfile
+
+# OS
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# IDE
+*.code-workspace
+*.sublime-workspace

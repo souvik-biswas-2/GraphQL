@@ -16,6 +16,7 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import { ApolloServer } from '@apollo/server';
 import { resolvers, typeDefs } from './lib/graphql/schema.js';
 import { GraphContext } from './types'; //typedef can be import without .js extension
+import { connectDb } from './lib/db/index.js';
 
 const port = process.env.PORT || 5000;
 const env = process.env.NODE_ENV || 'dev';
@@ -51,6 +52,7 @@ const apolloServer = new ApolloServer( {
 async function startServer() {
 
     try {
+        await connectDb();
         await apolloServer.start();
         initializeMiddleware(app);
         // connecting graphQL 
